@@ -1,18 +1,20 @@
 from typing import Annotated
+import io
 
+from PIL import Image
 import torch
 import uvicorn
 from fastapi import FastAPI, UploadFile, Query, File, HTTPException
-import json
-from PIL import Image
 from transformers import YolosImageProcessor, YolosForObjectDetection
-from pydantic import BaseModel
+
 
 app = FastAPI()
 # Model initialization
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model = YolosForObjectDetection.from_pretrained('hustvl/yolos-tiny', device_map='cuda:0')
-image_processor = YolosImageProcessor.from_pretrained('hustvl/yolos-tiny', device_map='cuda:0')
+model = YolosForObjectDetection.from_pretrained('hustvl/yolos-tiny', 
+                                                device_map=device)
+image_processor = YolosImageProcessor.from_pretrained('hustvl/yolos-tiny', 
+                                                      device_map=device)
 
 
 def yolos_object_detection(imgs, threshold, classes_of_interest):  
@@ -39,10 +41,10 @@ def yolos_object_detection(imgs, threshold, classes_of_interest):
     return output
 
 
-@app.post("/yolos-object-detection/")
-async def create_upload_file(
+@app.post("/object-detection/")
+async def yolos_object_detection(
         files: Annotated[list[UploadFile],
-            File(description="Images to be fed to the object detection model" \
+            File(description="Images fed to the object detection model. " \
                  "Just JPEG format supported")],
         threshold: Annotated[float, 
             Query(description="Minimum confidence threshold for the " \
@@ -52,12 +54,14 @@ async def create_upload_file(
                   description="IDs of the classes to be detected by the " \
                     "object detection model: https://huggingface.co/hustvl/" \
                     "yolos-tiny/blob/main/config.json")] = [1, 3]):
-    imgs = []
+    imgs = [] 
     for file in files:
         if file.content_type != "image/jpeg":
-            raise HTTPException(400, detail="Invalid image type." \
+            raise HTTPException(400, detail="Invalid image type. " \
                                 "Just JPEG support.")
-        imgs.append(Image.open(file.file))
+        request_object_content = await file.read()
+        img = Image.open(io.BytesIO(request_object_content))
+        imgs.append(img)
     output = yolos_object_detection(imgs, threshold, classes_of_interest)
     output = [{file.filename: result} for file, result in zip(files, output)]
 
