@@ -23,7 +23,7 @@ files = [
 ]
 
 try:
-    response = requests.post('http://localhost/object-detection/', 
+    response = requests.post('http://localhost/yolos-object-detection/', 
                              params=params, headers=headers, files=files)
     response.raise_for_status()
 except requests.exceptions.HTTPError as err:

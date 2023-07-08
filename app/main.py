@@ -41,8 +41,8 @@ def yolos_object_detection(imgs, threshold, classes_of_interest):
     return output
 
 
-@app.post("/object-detection/")
-async def yolos_object_detection(
+@app.post("/yolos-object-detection/")
+async def yolos_inference(
         files: Annotated[list[UploadFile],
             File(description="Images fed to the object detection model. " \
                  "Just JPEG format supported")],
