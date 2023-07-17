@@ -17,7 +17,21 @@ image_processor = YolosImageProcessor.from_pretrained('hustvl/yolos-tiny',
                                                       device_map=device)
 
 
-def yolos_object_detection(imgs, threshold, classes_of_interest):  
+def yolos_object_detection(imgs, threshold, classes_of_interest):
+    """YOLOS inference process.
+
+    Args:
+        imgs (list[<PIL.JpegImagePlugin.JpegImageFile]): Images to process.
+        threshold (float): Confidence threshold for detections (0.0 - 1.0)
+        classes_of_interest (list: int): IDs of the classes to be detected 
+            by the model (1 - 90). 
+            https://huggingface.co/hustvl/yolos-tiny/blob/main/config.json
+
+    Returns:
+        list[dicts]: Dict with detected labels, scores and bounding boxes 
+            (xmin, ymin, xmax, ymax).
+            
+    """
     inputs = image_processor(images=imgs, return_tensors="pt")
     outputs = model(**inputs)
 
@@ -48,12 +62,14 @@ async def yolos_inference(
                  "Just JPEG format supported")],
         threshold: Annotated[float, 
             Query(description="Minimum confidence threshold for the " \
-                  "detections to be considered valid.")] = 0.9,
+                  "detections to be considered valid.", 
+                  ge=0.0, le=1.0)] = 0.9,
         classes_of_interest: Annotated[list[int],
             Query(title="Classes of interest", 
                   description="IDs of the classes to be detected by the " \
                     "object detection model: https://huggingface.co/hustvl/" \
-                    "yolos-tiny/blob/main/config.json")] = [1, 3]):
+                    "yolos-tiny/blob/main/config.json",
+                  ge=1, le=90)] = [1, 3]):
     imgs = [] 
     for file in files:
         if file.content_type != "image/jpeg":
