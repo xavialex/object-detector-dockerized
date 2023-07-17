@@ -1,0 +1,42 @@
+Apartado 2: Partiendo del desarrollo, librerías y tecnologías utilizadas en el apartado 1. Plantear cuales serían los pasos necesarios para entrenar un modelo de detección con categorías no existentes en los modelos preentrenados. Los puntos en los que centrar la explicación son:
+
+1. Pasos necesarios a seguir.
+
+Una vez comprobado que no existen modelos libres entrenado en la/las categorías de interés, suponiendo un enfoque de Machine Learning (ML) supervisado, los pasos a seguir suelen ser: adquisición de un conjunto de datos (dataset) con las clases a detectar, etiquetado de las instancias presentes, experimentación con arquitecturas/modelos contrastados, verificación de resultados en un conjunto de datos de pruebas con una métrica determinada (e.g. accuracy, precision, F1-score) y despliegue del modelo en cuestión. Dentro de cada uno de estos apartados, y dependiendo siempre del problema a resolver, existen múltiples técnicas a abordar:  
+Si 
+
+2. Descripción de posibles problemas que puedan surgir y medidas para reducir el riesgo.
+
+Es posible que aparezcan problemas en todas las fases del desarrollo de un proyecto de ML. La adquisición de datos puede ser más o menos complicada en función de si la clase de interés es de fácil acceso y puede estar contenida en datasets abiertos o en imágenes sin derechos de autor fácilmente accesibles a través de internet o por el contrario si se pretenden detectar objetos poco habituales o bajo unas condiciones muy específicas. Generar un dataset de interés puede volverse, por lo tanto, una tarea nada trivial.  
+Durante el entrenamiento, si bien existen arquitecturas contrastadas para diferentes escenarios, es posible que la escasez de datos impida un aprendizaje lo suficientemente adecuado para las pretensiones del proyecto. Además, dependiendo de los requisitos, mayor poder de cómputo puede ser necesario para acelerar los tiempos de entrenamiento con su consiguiente coste.  
+Además, todas estas decisiones repercuten en la solución de inferencia. Para la solución final se deben confirmar decisiones de diseño junto a los interesados: ¿el modelo debe ser lo más preciso posible o ha de priorizar la velocidad de respuesta?. Todo ello repercute en cómo abordar las distintas fases de desarrollo.
+
+3. Estimación de cantidad de datos necesarios así como de los resultados, métricas, esperadas.
+
+Las técnicas modernas de Deep Learning (DL) requieren grandes cantidades de datos. En la mayoría de casos, cuantos más mejor. La literatura al respecto suele hablar de cientos sino miles de instancias necesarias por clase. Sin embargo, cabe destacar que el dominio sobre el que se pretende desarrollar la solución es de gran importancia. En entornos industriales, donde las condiciones de contorno están muy bien definidas y controladas, la cantidad de datos necesaria para alcanzar unos valores mínimos en las métricas seleccionadas puede verse muy reducida. Cabe destacar también el uso de buenas herramientas de etiquetado. En la actualidad existen algunas que cuentan con técnicas semi-supervisadas que son capaces de anotar ejemplos activamente basándose en anotaciones manuales previas, ayuda de creación de máscaras para tareas especialmente costosas como instanciación semántica y demás. 
+La métrica más común para los problemas de detección de objetos suele ser la Mean Average Precision ([MAP](https://www.v7labs.com/blog/mean-average-precision)), que aúna métricas de clasificación (i.e. si se ha identificado la clase correcta) con métricas de regresión mediante el cálculo del área solapada entre la caja detectada y la denominada ground-truth, conocida como Intersection over Union (IoU).
+
+4. Enumeración y pequeña descripción (2-3 frases) de técnicas que se pueden utilizar para mejorar el desempeño, las métricas del modelo en tiempo de entrenamiento y las métricas del modelo en tiempo de inferencia.
+
+Habiendo seleccionado una arquitectura para el modelo, son muy variadas las técnicas que se pueden utilizar para mejorar su desempeño en tiempo de entrenamiento: búsqueda de hiperparámetros mediante grid search o métodos más complejos, monitorización del entrenamiento mediante TensorBoard, Aim o herramientas similares, adición/manipulación de elemenots de regularización, etc.  
+Las métricas del modelo en tiempo de inferencia serán equivalentes siempre que el conjunto de test sea el mismo. Asumiendo que las métricas son de carácter técnico (tiempo de respuesta, etc.) existen técnicas como neural network pruning, quantization o distillation, o herramientas como Triton (más información en próximos apartados) que optimizan tiempos de ejecución de inferencia de modelos de DL.
+
+
+Apartado 3 (Opcional): Exponer como se adaptaría el caso 2 a un procesamiento en el borde. Los puntos en los que centrar la explicación son:
+
+1. Pasos necesarios a seguir.
+
+Los pasos a seguir son muy similares a los anteriormente mencionados. El factor a tener en cuenta adicionalmente es el de las condiciones de despliegue y ejecución del modelo (previamente mencionado). Se vuelve por tanto más crítica la selección de datos y de arquitecturas, teniendo en cuenta sobre todo las especificaciones del hardware en el que se desplegará la solución (e.g. memoria, GPU o hardware específico para DL). 
+
+2. Descripción de posibles problemas que puedan surgir y medidas para reducir el riesgo.
+
+Idealmente, las muestras (i.e. imágenes) presentes en el dataset provienen de una misma distribución. Por desgracia, este es raramente el caso (e.g. una app de detección de perros se entrena con imágenes de perros obtenidas de distintas fuentes pero en tiempo de inferencia recibe imágenes de móviles de distinta calidad, con lo que la actuación del modelo se resiente). Por ello, es recomendable que como mínimo el conjunto de test provenga de una distribución lo más similar posible a la de los datos de producción sobre los que el modelo realizará predicciones. Esto, aunque es también aplicable a cualquier otro sistema de detección de objetos, se vuelve especialmente interesante si los sistemas embebidos en los que se ejecutará la solución también adquirirán los datos. Un ejemplo de ello era un modelo entrenado en imágenes médicas tomadas por una máquina en concreto. Si bien los resultados eran muy prometedores para los datos disponibles, los investigadores vieron como, trasladando el mismo modelo a imágenes generadas por una máquina distinta, los resultados se veían alterados de forma dramática.  
+En cuanto al modelo en sí, es posible que si no se tienen en cuenta las características del hardware de despliegue, se hagan asunciones de arquitecturas demasiado grandes/complejas que, si bien cumplan con los requisitos puramente cualitatiovs (e.g. alcanzan un nivel de precisión adecuado) no puedan deplegarse en las condiciones necesarias. 
+
+3. Estimación de cantidad de datos necesarios así como de los resultados, métricas, esperadas.
+
+Las mismas consideraciones anteriormente explicadas aplican en este caso. Existen varias opciones como comenzar a entrenar un modelo cuya velocidad de inferencia ya esté validada en el hardware de interés o empezar a trabajar con modelos más grandes y luego tratar de reducir su complejidad: Existen muchas técnicas distintas para afrontar esta casuística, como por ejemplo la quantization, donde se reduce la precisión de los pesos del modelo, disminuyendo su tamaño asumiendo unas presumibles pérdidas de precisión; distillation, donde se busca generar un nuevo modelo más ligero basado en uno mayor previamente entrenado (Teacher/Student), etc.
+
+4. Enumeración y pequeña descripción (2-3 frases) de técnicas que se pueden utilizar para mejorar el desempeño, las métricas del modelo en tiempo de entrenamiento y las métricas y tiempo de ejecución en tiempo de inferencia.
+
+A las anteriormente mencionadas se pueden añadir acciones más específicas para cada caso de uso. Por ejemplo, soluciones como Triton se basan en la optimización del ratio de respuestas por parte de un modelo/modelos de DL en tiempo de inferencia. para ello recomiendan convertir el modelo base en un formato optimizado (e.g. ONNX, TensorRT), habilitar la posibilidad de hacer consultas al modelo en batches y elegir un tamaño óptimo (dependiendo de si el proceso puede realizarse offline o se trata de una aplicación en tiempo real), etc.
